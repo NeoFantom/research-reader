@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "site": {
+    "title": "耦合振子同步 · 进展报告",
+    "lang": "zh-CN",
+    "palette": "jade",
+    "density": "reading",
+    "wordmark": "Sync Lab",
+    "wordmark_accent": "进展报告",
+    "static": ["figures"],
+    "footer": "虚构课题，仅作 research-reader 示例。图中数字由 `examples/oscillator-sync/make_figures.py` 实际计算得出，可复现。"
+  },
+  "pages": [
+    {
+      "slug": "index",
+      "nav_title": "概览",
+      "nav_note": "结论、进度与待决事项",
+      "eyebrow": "第 3 周进展 · 供合作者审阅",
+      "title": "平均场理论在 N = 200 时已能准确预言同步转变",
+      "lead": "Kuramoto 模型的数值扫描显示：稳态序参量与理论曲线 \\(r=\\sqrt{1-K_c/K}\\) 的偏差在 \\(K \\ge 1.2\\) 时不超过 0.01；临界点附近的有限尺寸效应是下一步的重点。",
+      "facts": [
+        {"label": "振子数", "value": "N = 200"},
+        {"label": "扫描点", "value": "21 个 K 值"},
+        {"label": "单次耗时", "value": "约 0.05 s"},
+        {"label": "状态", "value": "待审阅"}
+      ],
+      "sections": [
+        {
+          "id": "key-finding",
+          "label": "Finding",
+          "title": "本周结论",
+          "components": [
+            {
+              "type": "title-panel",
+              "label": "Key finding",
+              "title": "超过临界耦合后，模拟值与平均场理论吻合到小数点后两位",
+              "body": [
+                "在洛伦兹频率分布（宽度 \\(\\gamma = 0.5\\)）下，理论临界耦合为 \\(K_c = 2\\gamma = 1\\)。扫描 \\(K \\in [0, 4]\\) 后，\\(K \\ge 1.2\\) 的所有点与理论值之差都在 0.01 以内。",
+                "\\(K < K_c\\) 时 r 并不为零，而是停在约 0.07，这与有限尺寸涨落的量级 \\(1/\\sqrt{N} \\approx 0.071\\) 一致。"
+              ],
+              "meta": "证据：结果页图 01、表 1；数据文件 figures/data.json"
+            },
+            {
+              "type": "figure",
+              "src": "figures/order-parameter.svg",
+              "alt": "序参量 r 随耦合强度 K 变化：K 小于 1 时接近 0，超过 1 后沿平方根曲线上升",
+              "caption": "**数据图。** 绿色点为每个 K 下稳态 r 的时间平均（取后 40% 时间），虚线为平均场理论。点击可放大。"
+            }
+          ]
+        },
+        {
+          "id": "progress",
+          "label": "Progress",
+          "title": "进度与下一步",
+          "components": [
+            {
+              "type": "sequence",
+              "items": [
+                {"title": "已完成：基线模拟", "body": "实现欧拉积分的 Kuramoto 模拟，确定性频率采样，固定随机种子，可逐位复现。"},
+                {"title": "已完成：与理论对照", "body": "完成 21 点扫描，与平均场曲线逐点比较，见结果页。"},
+                {"title": "进行中：有限尺寸分析", "body": "在 \\(N \\in \\{100, 200, 400, 800\\}\\) 下重复扫描，检验临界点附近 r 的标度。"},
+                {"title": "待定：是否换积分器", "body": "欧拉法在 \\(\\Delta t = 0.05\\) 下已稳定；是否改用 RK4 取决于有限尺寸分析对精度的要求。"}
+              ]
+            },
+            {
+              "type": "notice",
+              "tone": "warning",
+              "label": "需要审阅人决定",
+              "body": "有限尺寸分析的计算量随 N 线性增长、随扫描密度线性增长。若要在 \\(K_c\\) 附近加密到 0.02 步长，单机需约 10 分钟；请确认是否值得。"
+            }
+          ]
+        },
+        {
+          "id": "reading-guide",
+          "label": "Map",
+          "title": "这份报告怎么读",
+          "components": [
+            {
+              "type": "resource-index",
+              "items": [
+                {"eyebrow": "01 · 概览", "title": "本页", "href": "index.html", "description": "结论和需要你决定的事项，5 分钟读完。"},
+                {"eyebrow": "02 · 方法", "title": "模型与数值方法", "href": "methods.html", "description": "方程、参数、积分流程与关键代码。"},
+                {"eyebrow": "03 · 结果", "title": "结果与讨论", "href": "results.html", "description": "完整扫描表、时间序列、相位快照与开放问题。"}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "methods",
+      "nav_title": "模型与方法",
+      "nav_note": "方程、参数、流程、代码",
+      "eyebrow": "方法 · 可复现性说明",
+      "title": "用平均场形式把每步计算从 O(N²) 降到 O(N)",
+      "lead": "模型采用经典 Kuramoto 方程，频率取洛伦兹分布的确定性分位点，积分用固定步长欧拉法；所有参数都写在脚本顶部。",
+      "sections": [
+        {
+          "id": "model",
+          "label": "Model",
+          "title": "模型",
+          "components": [
+            {
+              "type": "prose",
+              "body": [
+                "N 个相位振子 \\(\\theta_i\\) 各有固有频率 \\(\\omega_i\\)，两两之间以强度 K 正弦耦合。引入复序参量 \\(r e^{i\\psi}\\) 后，全对全耦合可以改写成每个振子只与平均场相互作用。"
+              ]
+            },
+            {
+              "type": "math-panel",
+              "label": "方程",
+              "items": [
+                {"title": "原始形式", "note": "每步需要 \\(N^2\\) 次正弦计算。", "latex": "\\dot\\theta_i = \\omega_i + \\frac{K}{N}\\sum_{j=1}^{N} \\sin(\\theta_j - \\theta_i)"},
+                {"title": "序参量", "note": "r 衡量相位的集中程度：0 为完全无序，1 为完全同步。", "latex": "r e^{i\\psi} = \\frac{1}{N}\\sum_{j=1}^{N} e^{i\\theta_j}"},
+                {"title": "平均场形式", "note": "与原式严格等价，每步只需 O(N)。", "latex": "\\dot\\theta_i = \\omega_i + K r \\sin(\\psi - \\theta_i)"},
+                {"title": "理论预言", "note": "洛伦兹分布 \\(g(\\omega)=\\frac{\\gamma/\\pi}{\\omega^2+\\gamma^2}\\) 下的稳态解。", "latex": "r_\\infty = \\begin{cases} 0, & K < K_c = 2\\gamma \\\\ \\sqrt{1 - K_c/K}, & K \\ge K_c \\end{cases}"}
+              ]
+            },
+            {
+              "type": "prose",
+              "title": "为什么用确定性分位点取频率",
+              "body": "随机抽样会让每次运行的频率集合不同，r 的涨落里混入了抽样噪声。取分位点 \\(\\omega_i = \\gamma \\tan\\big(\\pi(\\tfrac{i+1/2}{N} - \\tfrac12)\\big)\\) 后，频率集合固定，剩下的差异只来自初始相位。",
+              "points": ["初始相位：在 \\([-\\pi, \\pi)\\) 上均匀抽样，种子固定为 7", "重尾频率的振子始终漂移，不影响稳态 r 的估计"]
+            }
+          ]
+        },
+        {
+          "id": "parameters",
+          "label": "Parameters",
+          "title": "参数",
+          "components": [
+            {
+              "type": "table",
+              "columns": ["符号", "含义", "取值", "选择理由"],
+              "rows": [
+                ["`N`", "振子数", "200", "单次运行不到 0.1 s，足够做 21 点扫描"],
+                ["\\(\\gamma\\)", "洛伦兹分布半宽", "0.5", "使 \\(K_c = 1\\)，便于读图"],
+                ["\\(\\Delta t\\)", "积分步长", "0.05", "与 \\(\\Delta t = 0.025\\) 对比，稳态 r 差异 < 0.004"],
+                ["`T_END`", "积分总时长", "100", "r(t) 在 t ≈ 20 前已进入稳态"],
+                ["—", "稳态估计窗口", "后 40% 时间", "排除初始弛豫"]
+              ],
+              "caption": "表 M1　全部参数写在 `make_figures.py` 顶部，修改后重跑即可复现所有图。"
+            }
+          ]
+        },
+        {
+          "id": "pipeline",
+          "label": "Pipeline",
+          "title": "计算流程",
+          "components": [
+            {
+              "type": "mermaid",
+              "caption": "**示意图。** 从参数到图表的流水线；「每个 K 值」框中的步骤在每个 K 值上重复。",
+              "code": "flowchart LR\n  P[参数<br/>N, γ, Δt] --> W[确定性频率<br/>ω_i]\n  W --> S\n  subgraph S[每个 K 值]\n    direction TB\n    I[初始相位<br/>seed = 7] --> E[欧拉积分<br/>平均场形式]\n    E --> R[稳态 r<br/>后 40% 平均]\n  end\n  S --> D[data.json]\n  D --> F[SVG 图]\n  D --> T[理论对照表]"
+            },
+            {
+              "type": "code-panel",
+              "label": "Python · 核心积分循环",
+              "code": "for step in range(steps):\n    z = sum(cmath.exp(1j * th) for th in theta) / N   # 复序参量\n    r, psi = abs(z), cmath.phase(z)\n    theta = [th + DT * (w + k * r * math.sin(psi - th))\n             for th, w in zip(theta, omega)]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "results",
+      "nav_title": "结果与讨论",
+      "nav_note": "数据、图、开放问题",
+      "eyebrow": "结果 · 第 3 周",
+      "title": "同步转变清晰可见，临界点附近仍需更大的 N",
+      "lead": "三组观察：稳态 r 与理论吻合；\\(K_c\\) 附近 r(t) 的涨落明显更大；亚临界区的 r 由有限尺寸涨落主导。",
+      "facts": [
+        {"label": "最大偏差（K ≥ 1.2）", "value": "0.009"},
+        {"label": "亚临界 r", "value": "≈ 0.07"},
+        {"label": "数据", "value": "figures/data.json"}
+      ],
+      "sections": [
+        {
+          "id": "sweep",
+          "label": "Sweep",
+          "title": "耦合强度扫描",
+          "components": [
+            {
+              "type": "table",
+              "columns": ["K", "模拟 r", "理论 r", "差值"],
+              "numeric_columns": [0, 1, 2, 3],
+              "rows": [
+                ["0.6", "0.084", "0", "+0.084"],
+                {"cells": ["1.2", "0.400", "0.408", "−0.009"], "recommended": true},
+                ["1.6", "0.609", "0.612", "−0.004"],
+                ["2.0", "0.702", "0.707", "−0.005"],
+                ["3.0", "0.813", "0.816", "−0.004"],
+                ["4.0", "0.863", "0.866", "−0.003"]
+              ],
+              "caption": "表 1　节选 6 个 K 值；高亮行是超临界区偏差最大的点。完整 21 点见 `figures/data.json`。"
+            },
+            {
+              "type": "prose",
+              "title": "超临界区：系统性略低于理论",
+              "body": "所有 \\(K > K_c\\) 的点都比理论低 0.003–0.009。平均场理论对应 \\(N \\to \\infty\\)，有限 N 下重尾频率的漂移振子占比略高，这一方向的偏差符合预期，但幅度是否按 \\(1/\\sqrt{N}\\) 缩小还需要验证。"
+            }
+          ]
+        },
+        {
+          "id": "dynamics",
+          "label": "Dynamics",
+          "title": "时间演化与相位分布",
+          "components": [
+            {
+              "type": "figure",
+              "src": "figures/time-series.svg",
+              "alt": "三个耦合强度下序参量随时间的变化：K=0.5 在 0.2 以下涨落，K=1.5 在 0.52 到 0.62 之间涨落，K=3 稳定在 0.81 到 0.84",
+              "caption": "**数据图。** r(t) 每 0.5 时间单位采样一次。K = 1.5 离临界点最近，稳态涨落最大。"
+            },
+            {
+              "type": "figure",
+              "src": "figures/phase-snapshots.svg",
+              "alt": "单位圆上的相位分布：K=0.5 时均匀散开，K=3 时集中在一侧，橙色箭头表示序参量",
+              "caption": "**数据图。** t = 100 时 200 个振子在单位圆上的位置；橙色箭头长度为 r，方向为 \\(\\psi\\)。"
+            }
+          ]
+        },
+        {
+          "id": "assessment",
+          "label": "Assessment",
+          "title": "证据与推断",
+          "components": [
+            {
+              "type": "evidence-list",
+              "items": [
+                {"kind": "fact", "title": "超临界区吻合良好", "body": "\\(K \\ge 1.2\\) 的 15 个点与理论之差均不超过 0.009。", "source": "表 1 · figures/data.json"},
+                {"kind": "fact", "title": "亚临界 r 与 \\(1/\\sqrt{N}\\) 同量级", "body": "K = 0 时 r = 0.064，\\(1/\\sqrt{200} = 0.071\\)。", "source": "figures/data.json"},
+                {"kind": "inference", "title": "偏差来自有限尺寸而非积分误差", "body": "步长减半后稳态 r 变化小于 0.004，远小于观测到的偏差，因此积分误差不是主因。", "source": "推断，基于表 M1 的步长对比"},
+                {"kind": "open", "title": "临界指数是否为 1/2", "body": "需要在 \\(K_c\\) 附近加密扫描，并对多个 N 做标度塌缩。", "source": "待第 4 周数据"}
+              ]
+            },
+            {
+              "type": "delta-grid",
+              "before_label": "上周计划",
+              "after_label": "本周调整",
+              "before": {"title": "直接改用 RK4 提高精度", "body": "原计划先换积分器再做有限尺寸分析。"},
+              "after": {"title": "先做有限尺寸分析", "body": "步长对比显示积分误差不是瓶颈，换积分器推迟到确有需要时。"}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

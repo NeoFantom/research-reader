@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  research-reader · hand-written starting point
+  1. Copy this file next to the assets/ folder (or keep it here) and rename it, e.g. report.html.
+  2. Replace the content. Keep the class names; they are the whole design system.
+  3. Outline (right rail) is generated from every <h2>/<h3> inside <main>. Headings inside an element
+     marked data-outline-skip (cards, panels, evidence items) are left out.
+  4. Guides (left rail) is the list of pages in your collection; edit it by hand.
+  5. Inline math: \( ... \)   display math: \[ ... \]   Mermaid: <pre class="mermaid"> ... </pre>
+  Palette: data-palette="jade" (default) or "cobalt". Density: data-density="reading" | "balanced" | "dense".
+-->
+<html lang="zh-CN" data-palette="jade" data-density="reading">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="一句话说明这份文档的范围和结论。">
+<title>文档标题 · 系列名</title>
+<script>try{var t=localStorage.getItem('rr-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t)}catch(_){}</script>
+<link rel="stylesheet" href="assets/vendor/katex/katex.min.css">
+<link rel="stylesheet" href="assets/reader.css">
+<script defer src="assets/vendor/katex/katex.min.js"></script>
+<script defer src="assets/vendor/katex/contrib/auto-render.min.js"></script>
+<!-- Mermaid is 3 MB; delete this line if the page has no diagrams. -->
+<script defer src="assets/vendor/mermaid/mermaid.min.js"></script>
+<script defer src="assets/reader.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<div class="page-shell" id="pageShell" data-guides="open" data-outline="open">
+
+<aside class="rail guides-rail" aria-label="Guides">
+<button class="rail-toggle" type="button" onclick="toggleGuides()" aria-expanded="true"><span>Guides</span><b>页间导航</b></button>
+<div class="rail-body guides-body"><span class="rail-label">本站页面</span>
+<nav class="guides-nav">
+  <a href="template.html" aria-current="page"><span>01</span><span><strong>概览</strong><small>结论与待决事项</small></span></a>
+  <a href="methods.html"><span>02</span><span><strong>方法</strong><small>模型、参数、代码</small></span></a>
+  <a href="results.html"><span>03</span><span><strong>结果</strong><small>数据、图、讨论</small></span></a>
+</nav></div>
+</aside>
+
+<div class="page-main">
+<header class="hero" id="top"><div class="wrap">
+  <div class="wordmark">项目名 <span>文档类型</span></div>
+  <p class="eyebrow">日期 · 状态</p>
+  <h1>标题写结论，而不是主题</h1>
+  <p class="lead">一句话说明读者、范围和结论。行内公式这样写：\(E = mc^2\)。</p>
+  <div class="fact-strip"><span><b>范围</b>写真实信息</span><span><b>状态</b>草稿</span><span><b>数据</b>文件名</span></div>
+</div></header>
+
+<main id="content">
+<section class="section-band"><div class="wrap">
+  <div class="section-heading"><span class="section-number">01</span><div><p class="eyebrow">Finding</p><h2 id="finding">第一节标题</h2></div></div>
+  <article class="title-panel" data-outline-skip>
+    <p class="component-label">Key finding</p>
+    <p class="panel-title">读者必须带走的一句话</p>
+    <p>为什么成立，依据在哪里。</p>
+  </article>
+  <div class="prose">
+    <h3>小节标题会进入 Outline</h3>
+    <p>正文段落与下面的表格、图、代码块同宽，不单独限制文字宽度。</p>
+    <ul><li>列表项一</li><li>列表项二</li></ul>
+  </div>
+  <aside class="notice warning" data-outline-skip><p class="component-label">注意</p><p>只放会改变理解方式的提醒。</p></aside>
+</div></section>
+
+<section class="section-band alt"><div class="wrap">
+  <div class="section-heading"><span class="section-number">02</span><div><p class="eyebrow">Evidence</p><h2 id="evidence">数据、公式与图</h2></div></div>
+  <div class="table-shell"><table>
+    <thead><tr><th>参数</th><th class="num">取值</th><th>说明</th></tr></thead>
+    <tbody><tr><td>\(\alpha\)</td><td class="num">0.5</td><td>示例行</td></tr><tr class="recommended"><td>\(\beta\)</td><td class="num">1.0</td><td>高亮行</td></tr></tbody>
+  </table><div class="table-caption">表 1　表格说明。</div></div>
+  <div class="math-panel" data-outline-skip><p class="component-label">方程</p>
+    <article class="math-row"><div class="math-copy"><h3>公式名</h3><p>一句解释。</p></div>
+    <div class="math-render" data-latex="\int_0^\infty e^{-x^2}\,dx = \frac{\sqrt\pi}{2}"><code>\int_0^\infty e^{-x^2}\,dx</code></div></article>
+  </div>
+  <figure class="figure zoomable"><div class="figure-bar"><span>Figure 01 · diagram</span><button type="button" tabindex="-1">放大</button></div>
+    <div class="figure-body"><div class="mermaid-host"><pre class="mermaid">flowchart LR
+  A[输入] --> B[处理] --> C[输出]</pre></div></div>
+    <figcaption><strong>示意图。</strong>注明这是数据图还是示意图。</figcaption></figure>
+  <div class="code-panel"><span class="code-label">Shell</span><pre><code>python3 render.py site.json -o out/</code></pre></div>
+</div></section>
+
+<section class="section-band"><div class="wrap">
+  <div class="section-heading"><span class="section-number">03</span><div><p class="eyebrow">Next</p><h2 id="next">证据与下一步</h2></div></div>
+  <div class="evidence-list" data-outline-skip>
+    <article class="evidence-item" data-kind="fact"><span class="evidence-mark">F1</span><div><h3>已验证的事实</h3><p>说明证据。</p><small>来源 · 日期</small></div></article>
+    <article class="evidence-item" data-kind="inference"><span class="evidence-mark">I1</span><div><h3>推断</h3><p>写清推理边界。</p><small>基于 F1</small></div></article>
+    <article class="evidence-item" data-kind="open"><span class="evidence-mark">Q1</span><div><h3>开放问题</h3><p>什么证据能回答它。</p><small>待定</small></div></article>
+  </div>
+  <div class="sequence" data-outline-skip>
+    <article class="sequence-step"><div><h3>下一步</h3><p>最小的可验证动作。</p></div></article>
+    <article class="sequence-step"><div><h3>再下一步</h3><p>完成的判据。</p></div></article>
+  </div>
+  <nav class="page-pager" aria-label="Pages"><a class="next" href="methods.html"><small>下一页 →</small><strong>方法</strong></a></nav>
+</div></section>
+</main>
+<footer class="footer"><div class="wrap">作者 · 生成方式 · 版本</div></footer>
+</div>
+
+<aside class="rail outline-rail" aria-label="Outline">
+<button class="rail-toggle" type="button" onclick="toggleOutline()" aria-expanded="true"><span>Outline</span><b>本页目录</b></button>
+<div class="rail-body outline-body"><span class="rail-label">本页章节</span><nav class="outline-nav"></nav>
+<div class="rail-tools"><button class="icon-button" id="themeBtn" type="button" onclick="toggleTheme()" aria-label="切换明暗">◐</button></div></div>
+</aside>
+</div>
+<div id="modal" role="dialog" aria-modal="true" onclick="closeModal()"><button class="modal-close" type="button" aria-label="关闭" onclick="closeModal()">×</button><div id="modalInner" onclick="event.stopPropagation()"></div></div>
+</body>
+</html>
