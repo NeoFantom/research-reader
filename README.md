@@ -98,4 +98,4 @@ CHROME=/path/to/chrome node tests/browser_check.mjs examples/oscillator-sync/dis
 
 ## License
 
-MIT，见 [LICENSE](LICENSE)。`assets/vendor/` 下的第三方文件按各自许可证分发。
+MIT，见 [LICENSE](LICENSE)。`assets/vendor/` 下的第三方文件按各自许可证分发，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
